@@ -15,5 +15,6 @@ test("Running local browser", async ({ context, page }) => {
   };
   // Get all popups when they open
   await expect(page).toHaveURL("https://app.storm.tg/trade/TON_USDT");
+  // set your wallet name here
   await expect(page.getByRole('button', { name: 'Wallet UQDw6...yhxbO' })).toBeVisible();
 });
