@@ -2,6 +2,9 @@
 import { test as base, BrowserContext, Page } from '@playwright/test';
 import { BrowserContextOptions } from 'playwright';
 import * as path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 function firefoxContextOptions({ pathToExtension }: { pathToExtension: string }) {
     return {
@@ -69,7 +72,7 @@ export const test = base.extend<{
             let phrasesInputs = tonKeeperPage.locator('input');
             await expect(phrasesInputs).toHaveCount(24);
             const allPhrasedInputs = await phrasesInputs.all();
-            const phrases = process.env.PHRASES;
+            const phrases = JSON.parse(process.env.PHRASES);
             for (const [index, input] of allPhrasedInputs.entries()) {
                 await input.fill(phrases[index]);
             }
