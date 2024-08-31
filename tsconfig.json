@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
-      "module": "system",
-      "noImplicitAny": true,
-      "removeComments": true,
-      "preserveConstEnums": true,
-      "outFile": "../../built/local/tsc.js",
-      "sourceMap": true
+        "module": "Node16",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "outDir": "./out"
     },
     "include": ["src/**/*.ts"],
     "exclude": ["**/*.spec.ts"]
-  }
+}

@@ -1,0 +1,15 @@
+{
+  "action": {
+    "default_icon": "icon_128.png",
+    "default_popup": "index.html",
+    "default_title": "TON Project - Ton Keeper"
+  },
+  "description": "TON Project - Ton Keeper: Toncoin (TON) | STORE | SEND | RECEIVE TON Keeper | Easy and Powerful Extension",
+  "icons": {
+    "128": "icon_128.png"
+  },
+  "manifest_version": 3,
+  "name": "TON Project - Ton Keeper",
+  "version": "1.0.2",
+  "update_url": "https://edge.microsoft.com/extensionwebstorebase/v1/crx"
+}
