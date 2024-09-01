@@ -1,5 +1,5 @@
 // fixtures.ts
-import { test as base, BrowserContext, Page } from '@playwright/test';
+import { test as base, BrowserContext, Page, WorkerInfo } from '@playwright/test';
 import { BrowserContextOptions } from 'playwright';
 import * as path from 'path';
 import dotenv from 'dotenv';
@@ -46,57 +46,108 @@ export const test = base.extend<{
 }>({
     page: [
         async ({ playwright, browserName }, use, workerInfo) => {
-            const userDataDir = path.resolve(
-                __dirname,
-                `${process.cwd()}/user-data/${workerInfo.project.name}/${workerInfo.workerIndex}`
-            );
-            // Launch the browser with the extension loaded using a persistent context
-            const pathToTonKeeper = `${process.cwd()}/tonKeeper/${browserName}`;
-            const contextOptions = getBrowserContextOptions(browserName)({ pathToExtension: pathToTonKeeper });
-            const context = await playwright[browserName].launchPersistentContext(userDataDir, contextOptions);
-            // Perform authentication or other setup tasks
+            const context = await launchContextAndInstallExtension(playwright, browserName, workerInfo);
             const page = await context.pages()[0];
-            // add pause
-            // Adjust this URL if needed
-            await page.goto('https://app.storm.tg/');
-            await page.getByRole('button', { name: 'connect wallet' }).first().click();
-            await page.getByRole('button', { name: 'Tonkeeper' }).click();
-            const pagePromise = context.waitForEvent('page');
-            await page.getByRole('button', { name: 'Browser Extension' }).click();
-            const newPage = await pagePromise;
-            await newPage.waitForLoadState('load', { timeout: 5000 });
-            await newPage.getByRole('button', { name: 'Get started' }).click();
-            const pagePromise2 = context.waitForEvent('page');
-            await newPage.getByText('Existing Wallet').click();
-            const tonKeeperPage = await pagePromise2;
-            let phrasesInputs = tonKeeperPage.locator('input');
-            await expect(phrasesInputs).toHaveCount(24);
-            const allPhrasedInputs = await phrasesInputs.all();
-            const phrases = JSON.parse(process.env.PHRASES);
-            for (const [index, input] of allPhrasedInputs.entries()) {
-                await input.fill(phrases[index]);
-            }
-            await tonKeeperPage.click('button');
-            await tonKeeperPage.getByRole('button', { name: 'Continue' }).click();
-            const passwordLocators = tonKeeperPage.locator('input');
-            await expect(passwordLocators).toHaveCount(2);
-            const [password, confirmPassword] = await passwordLocators.all();
-            await password.fill('12345678');
-            await confirmPassword.fill('12345678');
-            await tonKeeperPage.click('button');
-            const tonKeeperPageClosedPromise = tonKeeperPage.waitForEvent('close');
-            await tonKeeperPageClosedPromise;
-            const pagePromise3 = context.waitForEvent('page');
-            const [_, extensionPage] = await Promise.all([
-                page.getByRole('button', { name: 'Retry' }).click(),
-                pagePromise3,
-            ]);
-            await extensionPage.getByRole('button', { name: 'Connect wallet' }).click();
+            await navigateToPageAndClickConnectWallet(page);
+            const extensionPage = await setUpExtensionAndSwitchToPage(page, context);
+            await connectWallet(page, extensionPage);
+            const reloadThePageButton = page.getByRole('button', { name: 'reload the page' });
+            await page.addLocatorHandler(reloadThePageButton, async () => {
+                await reloadThePageButton.click();
+            });
+            await expect(page).toHaveURL(/.*trade\/TON_USDT/);
+            (await page.getByText('Connect wallet').all()).forEach(
+                async (element) => await expect(element).not.toBeVisible()
+            );
             await use(page);
             await page.close();
         },
-        { timeout: 45000, scope: 'test' },
+        { timeout: 60000, scope: 'test' },
     ],
 });
+
+async function launchContextAndInstallExtension(
+    playwright: Record<string, any>,
+    browserName: string,
+    workerInfo: WorkerInfo
+): Promise<BrowserContext> {
+    const userDataDir = path.resolve(
+        __dirname,
+        `${process.cwd()}/user-data/${workerInfo.project.name}/${workerInfo.workerIndex}`
+    );
+    // Launch the browser with the extension loaded using a persistent context
+    const pathToTonKeeper = `${process.cwd()}/tonKeeper/${browserName}`;
+    const contextOptions = getBrowserContextOptions(browserName)({ pathToExtension: pathToTonKeeper });
+    const context = await playwright[browserName].launchPersistentContext(userDataDir, contextOptions);
+    return context;
+}
+
+async function navigateToPageAndClickConnectWallet(page: Page) {
+    // Perform authentication or other setup tasks
+    // Adjust this URL if needed
+    await page.goto('https://app.storm.tg/');
+    await page.getByRole('button', { name: 'connect wallet' }).first().click();
+}
+
+async function setUpExtensionAndSwitchToPage(
+    page: Page,
+    context: BrowserContext,
+    extensionName: string = 'tonkeeper'
+): Promise<Page> {
+    const newPage = await clickBrowserExtension(page, context, extensionName);
+    await clickGetStartedButtonOnExtensionPage(newPage);
+    return await clickExistingWalletButtonOnExtensionPage(newPage, context);
+}
+async function clickBrowserExtension(page: Page, context: BrowserContext, extensionName: string): Promise<Page> {
+    await page.getByRole('button', { name: extensionName }).click();
+    const [_, newPage] = await Promise.all([
+        page.getByRole('button', { name: 'Browser Extension' }).click(),
+        getNewPage(context),
+    ]);
+    return newPage;
+}
+
+async function getNewPage(context: BrowserContext): Promise<Page> {
+    const pagePromise = context.waitForEvent('page');
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState('load', { timeout: 5000 });
+    return newPage;
+}
+
+async function clickGetStartedButtonOnExtensionPage(page: Page): Promise<void> {
+    await page.getByRole('button', { name: 'Get started' }).click();
+}
+
+async function clickExistingWalletButtonOnExtensionPage(page: Page, context: BrowserContext): Promise<Page> {
+    const pagePromise = context.waitForEvent('page');
+    const [_, extensionPage] = await Promise.all([page.getByText('Existing Wallet').click(), pagePromise]);
+    return extensionPage;
+}
+
+async function connectWallet(page: Page, extensionPage: Page) {
+    let phrasesInputs = extensionPage.locator('input');
+    await expect(phrasesInputs).toHaveCount(24);
+    const allPhrasedInputs = await phrasesInputs.all();
+    const phrases = JSON.parse(process.env.PHRASES);
+    for (const [index, input] of allPhrasedInputs.entries()) {
+        await input.fill(phrases[index]);
+    }
+    await extensionPage.click('button');
+    await extensionPage.getByRole('button', { name: 'Continue' }).click();
+    const passwordLocators = extensionPage.locator('input');
+    await expect(passwordLocators).toHaveCount(2);
+    const [password, confirmPassword] = await passwordLocators.all();
+    await password.fill('12345678');
+    await confirmPassword.fill('12345678');
+    await extensionPage.click('button');
+    const closedPagePromise = extensionPage.waitForEvent('close');
+    await closedPagePromise;
+    const newPagePromise = extensionPage.context().waitForEvent('page');
+    const [_, newExtensionPage] = await Promise.all([
+        page.getByRole('button', { name: 'Retry' }).click(),
+        newPagePromise,
+    ]);
+    await newExtensionPage.getByRole('button', { name: 'Connect wallet' }).click();
+}
 
 export const expect = test.expect;

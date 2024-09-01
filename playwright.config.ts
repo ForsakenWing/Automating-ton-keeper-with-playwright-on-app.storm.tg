@@ -2,7 +2,8 @@ import { defineConfig, devices } from 'playwright/test';
 
 export default defineConfig({
     expect: {
-        timeout: 30 * 1000,
+        timeout: 10 * 1000,
+        toHaveScreenshot: { maxDiffPixels: 100 },
     },
     reporter: [['list'], ['html']],
     globalSetup: './global-setup',
@@ -11,24 +12,14 @@ export default defineConfig({
     use: {
         headless: false,
         screenshot: 'on',
+        trace: 'on',
     },
     projects: [
         {
-            name: 'chromium',
+            name: 'chrome',
             use: {
-                browserName: 'chromium',
-            },
-        },
-        {
-            name: 'firefox',
-            use: {
-                browserName: 'firefox',
-            },
-        },
-        {
-            name: 'webkit',
-            use: {
-                browserName: 'webkit',
+                ...devices['Desktop Chrome'],
+                channel: 'chrome',
             },
         },
         // add edge
