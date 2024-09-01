@@ -33,7 +33,6 @@ export default defineConfig({
                 channel: 'msedge',
             },
         },
-        // Not supported yet
         {
             name: 'Iphone13-Chrome',
             testDir: './tests/mobile',
@@ -41,6 +40,15 @@ export default defineConfig({
                 ...devices['iPhone 13'],
                 browserName: 'chromium',
                 channel: 'chrome',
+            },
+        },
+        {
+            name: 'GalaxySIII-msedge',
+            testDir: './tests/mobile',
+            use: {
+                ...devices['Galaxy S III'],
+                browserName: 'chromium',
+                channel: 'msedge',
             },
         },
     ],
