@@ -33,6 +33,7 @@ const getBrowserContextOptions = (browserName: string) => {
         case 'firefox':
             return firefoxContextOptions;
         case 'chromium':
+        case 'chrome':
         case 'edge':
             return chromeContextOptions;
         default:
@@ -86,6 +87,11 @@ async function navigateToPageAndClickConnectWallet(page: Page) {
     // Perform authentication or other setup tasks
     // Adjust this URL if needed
     await page.goto('https://app.storm.tg/');
+    // Trying to add support for mobile devices, but it seems like extensions are not applicable for them and we would need a work-around
+    const continueInBrowserButton = page.getByRole('button', { name: 'Continue' });
+    await page.addLocatorHandler(continueInBrowserButton, async () => {
+        await continueInBrowserButton.click();
+    });
     await page.getByRole('button', { name: 'connect wallet' }).first().click();
 }
 

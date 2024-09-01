@@ -16,7 +16,7 @@ export default defineConfig({
     },
     projects: [
         {
-            name: 'chrome',
+            name: 'Desktop-Chrome',
             use: {
                 ...devices['Desktop Chrome'],
                 channel: 'chrome',
@@ -24,12 +24,21 @@ export default defineConfig({
         },
         // add edge
         {
-            name: 'edge',
+            name: 'Desktop-Edge',
             use: {
                 ...devices['Desktop Edge'],
                 channel: 'msedge',
             },
         },
+        // Not supported yet
+        // {
+        //     name: 'Iphone13-Chrome',
+        //     use: {
+        //         ...devices['iPhone 13'],
+        //         browserName: 'chromium',
+        //         channel: 'chrome',
+        //     },
+        // },
     ],
     testDir: './tests',
 });
