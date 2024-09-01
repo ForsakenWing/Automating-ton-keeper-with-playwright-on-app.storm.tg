@@ -13,10 +13,12 @@ export default defineConfig({
         headless: false,
         screenshot: 'on',
         trace: 'on',
+        baseURL: 'https://app.storm.tg/',
     },
     projects: [
         {
             name: 'Desktop-Chrome',
+            testDir: './tests/desktop',
             use: {
                 ...devices['Desktop Chrome'],
                 channel: 'chrome',
@@ -25,20 +27,22 @@ export default defineConfig({
         // add edge
         {
             name: 'Desktop-Edge',
+            testDir: './tests/desktop',
             use: {
                 ...devices['Desktop Edge'],
                 channel: 'msedge',
             },
         },
         // Not supported yet
-        // {
-        //     name: 'Iphone13-Chrome',
-        //     use: {
-        //         ...devices['iPhone 13'],
-        //         browserName: 'chromium',
-        //         channel: 'chrome',
-        //     },
-        // },
+        {
+            name: 'Iphone13-Chrome',
+            testDir: './tests/mobile',
+            use: {
+                ...devices['iPhone 13'],
+                browserName: 'chromium',
+                channel: 'chrome',
+            },
+        },
     ],
     testDir: './tests',
 });

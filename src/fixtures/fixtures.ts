@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+type Playwright = typeof import('playwright-core');
+
 function firefoxContextOptions({ pathToExtension }: { pathToExtension: string }) {
     return {
         firefoxUserPrefs: {
@@ -42,13 +44,18 @@ const getBrowserContextOptions = (browserName: string) => {
 };
 
 export const test = base.extend<{
-    context: BrowserContext;
     page: Page;
 }>({
     page: [
-        async ({ playwright, browserName }, use, workerInfo) => {
-            const context = await launchContextAndInstallExtension(playwright, browserName, workerInfo);
-            const page = await context.pages()[0];
+        async ({ playwright, browserName, viewport, isMobile, userAgent }, use, workerInfo) => {
+            const context = await launchContextAndInstallExtension(
+                playwright,
+                browserName,
+                workerInfo,
+                isMobile,
+                userAgent
+            );
+            const page = context.pages()[0];
             await navigateToPageAndClickConnectWallet(page);
             const extensionPage = await setUpExtensionAndSwitchToPage(page, context);
             await connectWallet(page, extensionPage);
@@ -57,9 +64,9 @@ export const test = base.extend<{
                 await reloadThePageButton.click();
             });
             await expect(page).toHaveURL(/.*trade\/TON_USDT/);
-            (await page.getByText('Connect wallet').all()).forEach(
-                async (element) => await expect(element).not.toBeVisible()
-            );
+            await expect(page.getByText('Connect wallet').first()).not.toBeVisible();
+            await expect(page.getByText('Wallet')).toBeVisible();
+            await page.setViewportSize(viewport);
             await use(page);
             await page.close();
         },
@@ -68,9 +75,11 @@ export const test = base.extend<{
 });
 
 async function launchContextAndInstallExtension(
-    playwright: Record<string, any>,
-    browserName: string,
-    workerInfo: WorkerInfo
+    playwright: Playwright,
+    browserName: keyof Playwright,
+    workerInfo: WorkerInfo,
+    isMobile: boolean,
+    userAgent: string
 ): Promise<BrowserContext> {
     const userDataDir = path.resolve(
         __dirname,
@@ -79,7 +88,14 @@ async function launchContextAndInstallExtension(
     // Launch the browser with the extension loaded using a persistent context
     const pathToTonKeeper = `${process.cwd()}/tonKeeper/${browserName}`;
     const contextOptions = getBrowserContextOptions(browserName)({ pathToExtension: pathToTonKeeper });
-    const context = await playwright[browserName].launchPersistentContext(userDataDir, contextOptions);
+    const context = await playwright[browserName].launchPersistentContext(userDataDir, {
+        ...contextOptions,
+        isMobile: false,
+        viewport: { width: 1280, height: 720 },
+        userAgent: isMobile
+            ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+            : userAgent,
+    });
     return context;
 }
 
@@ -156,4 +172,4 @@ async function connectWallet(page: Page, extensionPage: Page) {
     await newExtensionPage.getByRole('button', { name: 'Connect wallet' }).click();
 }
 
-export const expect = test.expect;
+export const expect = base.expect;
