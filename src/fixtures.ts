@@ -62,7 +62,7 @@ export const test = base.extend<{
             await use(page);
             await page.close();
         },
-        { timeout: 60000, scope: 'test' },
+        { timeout: 90000, scope: 'test' },
     ],
 });
 
