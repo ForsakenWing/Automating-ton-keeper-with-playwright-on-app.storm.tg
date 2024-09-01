@@ -1,5 +1,5 @@
-import { AppFactory } from '../pages/mobile/app';
-import { test as base } from './fixtures';
+import { AppFactory } from '@mobile-pages/app';
+import { test as base } from './fixture';
 
 export const test = base.extend<{
     app: AppFactory;

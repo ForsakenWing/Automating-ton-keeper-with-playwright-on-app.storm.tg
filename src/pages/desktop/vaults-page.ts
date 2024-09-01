@@ -1,6 +1,6 @@
 import { Page, Locator } from 'playwright';
 import { LandingPage } from './landing-page';
-import { expect } from '../../fixtures/fixtures';
+import { expect } from '@fixtures/desktop-fixture';
 
 export class VaultsPage extends LandingPage {
     public readonly aboutVaultBtn: Locator;

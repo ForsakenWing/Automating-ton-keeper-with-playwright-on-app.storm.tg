@@ -1,5 +1,5 @@
-import { AppFactory } from '../pages/desktop/app';
-import { test as base } from './fixtures';
+import { AppFactory } from '@desktop-pages/app';
+import { test as base } from './fixture';
 
 export const test = base.extend<{
     app: AppFactory;
@@ -9,3 +9,5 @@ export const test = base.extend<{
         await use(app);
     },
 });
+
+export const { expect } = test;

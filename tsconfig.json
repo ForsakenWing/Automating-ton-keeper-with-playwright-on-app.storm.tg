@@ -5,8 +5,14 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
-        "outDir": "./out"
+        "outDir": "./out",
+        "paths": {
+            "@pages/*": ["./src/pages/*"],
+            "@desktop-pages/*": ["./src/pages/desktop/*"],
+            "@mobile-pages/*": ["./src/pages/mobile/*"],
+            "@fixtures/*": ["./src/fixtures/*"]
+        }
     },
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts", "global-setup.ts"],
     "exclude": ["**/*.spec.ts"]
 }

@@ -1,12 +1,9 @@
 // fixtures.ts
-import { test as base, BrowserContext, Page, WorkerInfo } from '@playwright/test';
-import { BrowserContextOptions } from 'playwright';
+import { test as base, BrowserContext, BrowserType, Page, WorkerInfo } from '@playwright/test';
 import * as path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-type Playwright = typeof import('playwright-core');
 
 function firefoxContextOptions({ pathToExtension }: { pathToExtension: string }) {
     return {
@@ -21,13 +18,13 @@ function firefoxContextOptions({ pathToExtension }: { pathToExtension: string })
             // Add any other preferences you need to control
         },
         args: ['-install-extension', pathToExtension + '/tonkeeper.xpi'],
-    } as BrowserContextOptions;
+    };
 }
 
 function chromeContextOptions({ pathToExtension }: { pathToExtension: string }) {
     return {
         args: ['--disable-extensions-except=' + pathToExtension, '--load-extension=' + pathToExtension, '--no-sandbox'],
-    } as BrowserContextOptions;
+    };
 }
 
 const getBrowserContextOptions = (browserName: string) => {
@@ -48,12 +45,13 @@ export const test = base.extend<{
 }>({
     page: [
         async ({ playwright, browserName, viewport, isMobile, userAgent }, use, workerInfo) => {
+            const browser = playwright[browserName];
             const context = await launchContextAndInstallExtension(
-                playwright,
+                browser,
                 browserName,
                 workerInfo,
                 isMobile,
-                userAgent
+                userAgent,
             );
             const page = context.pages()[0];
             await navigateToPageAndClickConnectWallet(page);
@@ -75,20 +73,20 @@ export const test = base.extend<{
 });
 
 async function launchContextAndInstallExtension(
-    playwright: Playwright,
-    browserName: keyof Playwright,
+    browser: BrowserType,
+    browserName: string,
     workerInfo: WorkerInfo,
     isMobile: boolean,
-    userAgent: string
+    userAgent: string,
 ): Promise<BrowserContext> {
     const userDataDir = path.resolve(
         __dirname,
-        `${process.cwd()}/user-data/${workerInfo.project.name}/${workerInfo.workerIndex}`
+        `${process.cwd()}/user-data/${workerInfo.project.name}/${workerInfo.workerIndex}`,
     );
     // Launch the browser with the extension loaded using a persistent context
     const pathToTonKeeper = `${process.cwd()}/tonKeeper/${browserName}`;
     const contextOptions = getBrowserContextOptions(browserName)({ pathToExtension: pathToTonKeeper });
-    const context = await playwright[browserName].launchPersistentContext(userDataDir, {
+    const context = await browser.launchPersistentContext(userDataDir, {
         ...contextOptions,
         isMobile: false,
         viewport: { width: 1280, height: 720 },
@@ -114,7 +112,7 @@ async function navigateToPageAndClickConnectWallet(page: Page) {
 async function setUpExtensionAndSwitchToPage(
     page: Page,
     context: BrowserContext,
-    extensionName: string = 'tonkeeper'
+    extensionName: string = 'tonkeeper',
 ): Promise<Page> {
     const newPage = await clickBrowserExtension(page, context, extensionName);
     await clickGetStartedButtonOnExtensionPage(newPage);
@@ -122,7 +120,7 @@ async function setUpExtensionAndSwitchToPage(
 }
 async function clickBrowserExtension(page: Page, context: BrowserContext, extensionName: string): Promise<Page> {
     await page.getByRole('button', { name: extensionName }).click();
-    const [_, newPage] = await Promise.all([
+    const [, newPage] = await Promise.all([
         page.getByRole('button', { name: 'Browser Extension' }).click(),
         getNewPage(context),
     ]);
@@ -142,12 +140,12 @@ async function clickGetStartedButtonOnExtensionPage(page: Page): Promise<void> {
 
 async function clickExistingWalletButtonOnExtensionPage(page: Page, context: BrowserContext): Promise<Page> {
     const pagePromise = context.waitForEvent('page');
-    const [_, extensionPage] = await Promise.all([page.getByText('Existing Wallet').click(), pagePromise]);
+    const [, extensionPage] = await Promise.all([page.getByText('Existing Wallet').click(), pagePromise]);
     return extensionPage;
 }
 
 async function connectWallet(page: Page, extensionPage: Page) {
-    let phrasesInputs = extensionPage.locator('input');
+    const phrasesInputs = extensionPage.locator('input');
     await expect(phrasesInputs).toHaveCount(24);
     const allPhrasedInputs = await phrasesInputs.all();
     const phrases = JSON.parse(process.env.PHRASES);
@@ -165,7 +163,7 @@ async function connectWallet(page: Page, extensionPage: Page) {
     const closedPagePromise = extensionPage.waitForEvent('close');
     await closedPagePromise;
     const newPagePromise = extensionPage.context().waitForEvent('page');
-    const [_, newExtensionPage] = await Promise.all([
+    const [, newExtensionPage] = await Promise.all([
         page.getByRole('button', { name: 'Retry' }).click(),
         newPagePromise,
     ]);

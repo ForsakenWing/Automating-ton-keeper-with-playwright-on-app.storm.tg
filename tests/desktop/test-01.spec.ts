@@ -1,4 +1,4 @@
-import { test } from '../../src/fixtures/desktop-fixtures';
+import { test } from '@fixtures/desktop-fixture';
 
 test('Open vaults', async ({ app: { landingPage, vaultsPage } }) => {
     await landingPage.openVaultsPage();
