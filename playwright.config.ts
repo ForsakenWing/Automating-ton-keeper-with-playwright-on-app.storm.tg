@@ -8,7 +8,7 @@ export default defineConfig({
     reporter: [['list'], ['html']],
     globalSetup: './global-setup',
     fullyParallel: true,
-    workers: 8,
+    workers: process.env.CI ? '100%' : undefined,
     use: {
         headless: false,
         screenshot: 'on',

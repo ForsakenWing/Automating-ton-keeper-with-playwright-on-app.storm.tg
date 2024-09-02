@@ -1,5 +1,5 @@
 // fixtures.ts
-import { test as base, BrowserContext, BrowserType, Page, WorkerInfo } from '@playwright/test';
+import { test as base, expect, BrowserContext, BrowserType, Page, WorkerInfo } from '@playwright/test';
 import * as path from 'path';
 import dotenv from 'dotenv';
 
@@ -81,7 +81,7 @@ async function launchContextAndInstallExtension(
 ): Promise<BrowserContext> {
     const userDataDir = path.resolve(
         __dirname,
-        `${process.cwd()}/user-data/${workerInfo.project.name}/${workerInfo.workerIndex}`,
+        `${process.cwd()}/user-data/${workerInfo.project.name}/${workerInfo.workerIndex}/${Date.now()}`,
     );
     // Launch the browser with the extension loaded using a persistent context
     const pathToTonKeeper = `${process.cwd()}/tonKeeper/${browserName}`;
@@ -159,15 +159,15 @@ async function connectWallet(page: Page, extensionPage: Page) {
     const [password, confirmPassword] = await passwordLocators.all();
     await password.fill('12345678');
     await confirmPassword.fill('12345678');
-    await extensionPage.click('button');
-    const closedPagePromise = extensionPage.waitForEvent('close');
-    await closedPagePromise;
+    await Promise.all([
+        extensionPage.click('button'),
+        expect(extensionPage.getByText('Congratulations!')).toBeVisible(),
+    ]);
     const newPagePromise = extensionPage.context().waitForEvent('page');
+    await extensionPage.close();
     const [, newExtensionPage] = await Promise.all([
         page.getByRole('button', { name: 'Retry' }).click(),
         newPagePromise,
     ]);
     await newExtensionPage.getByRole('button', { name: 'Connect wallet' }).click();
 }
-
-export const expect = base.expect;
