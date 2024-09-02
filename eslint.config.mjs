@@ -39,7 +39,7 @@ export default [
             'prettier/prettier': 'error', // Treat Prettier formatting issues as ESLint errors
         },
     },
-    { ignores: ['tonKeeper/*', 'playwright*'] },
+    { ignores: ['tonKeeper/*', 'playwright*', './package*', '**/pre-commit'] },
 
     includeIgnoreFile(gitignorePath),
 

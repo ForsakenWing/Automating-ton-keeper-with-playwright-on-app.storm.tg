@@ -6,16 +6,16 @@
     "scripts": {
         "pretest": "tsc --incremental -p tests/tsconfig.json",
         "test": "playwright test -c tests-out",
-        "prettify": "prettier -w .",
-        "lint": "eslint . --fix"
+        "prepare": "husky install",
+        "lint:fix": "eslint . --fix",
+        "lint": "eslint ."
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
         "dotenv": "^16.4.5",
         "path": "^0.12.7",
-        "playwright": "^1.45.3",
-        "uninstall": "^0.0.0"
+        "playwright": "^1.45.3"
     },
     "devDependencies": {
         "@eslint/compat": "^1.1.1",
@@ -27,6 +27,7 @@
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.2.1",
         "globals": "^15.9.0",
+        "husky": "^9.1.5",
         "prettier": "^3.3.3",
         "prettier-eslint": "^16.3.0",
         "typescript-eslint": "^8.3.0"
