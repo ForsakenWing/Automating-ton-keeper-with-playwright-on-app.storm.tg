@@ -7,6 +7,7 @@ export default defineConfig({
     },
     reporter: [['list'], ['html']],
     globalSetup: './global-setup',
+    globalTeardown: './global-teardown',
     fullyParallel: true,
     workers: process.env.CI ? '100%' : undefined,
     use: {

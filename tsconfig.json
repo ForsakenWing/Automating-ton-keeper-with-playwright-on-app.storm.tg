@@ -13,6 +13,6 @@
             "@fixtures/*": ["./src/fixtures/*"]
         }
     },
-    "include": ["src/**/*.ts", "global-setup.ts"],
+    "include": ["src/**/*.ts", "global*"],
     "exclude": ["**/*.spec.ts"]
 }
