@@ -19,38 +19,38 @@ export default defineConfig({
     projects: [
         {
             name: 'Desktop-Chrome',
-            testDir: './tests/desktop',
             use: {
                 ...devices['Desktop Chrome'],
                 channel: 'chrome',
             },
+            testMatch: ['**/desktop/*.spec.ts'],
         },
         // add edge
         {
             name: 'Desktop-Edge',
-            testDir: './tests/desktop',
             use: {
                 ...devices['Desktop Edge'],
                 channel: 'msedge',
             },
+            testMatch: ['**/desktop/*.spec.ts'],
         },
         {
             name: 'Iphone13-Chrome',
-            testDir: './tests/mobile',
             use: {
                 ...devices['iPhone 13'],
                 browserName: 'chromium',
                 channel: 'chrome',
             },
+            testMatch: ['**/mobile/*.spec.ts'],
         },
         {
             name: 'GalaxySIII-msedge',
-            testDir: './tests/mobile',
             use: {
                 ...devices['Galaxy S III'],
                 browserName: 'chromium',
                 channel: 'msedge',
             },
+            testMatch: ['**/mobile/*.spec.ts'],
         },
     ],
     testDir: './tests',
