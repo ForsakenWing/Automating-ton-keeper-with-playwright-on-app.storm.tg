@@ -13,6 +13,5 @@
             "@fixtures/*": ["./src/fixtures/*"]
         }
     },
-    "include": ["src/**/*.ts", "global*"],
-    "exclude": ["**/*.spec.ts"]
+    "include": ["**/*.ts", "global*"]
 }
